@@ -32,6 +32,7 @@ Takes the path of two metadata csv as input arguments:
 #==============================================================================
 # 3. Run model.py 
 #==============================================================================
+
 Run model.py
 The script takes three arguments:    
     --model - pertaining to various models (Logistic Regression("LR"), Decision Trees("DT"),
@@ -46,5 +47,3 @@ The script takes three arguments:
 #==============================================================================
 
 This script is used to generate the word clouds for Control vs Dementia subjects.
-
-# Automatic_Alzheier_Detection
