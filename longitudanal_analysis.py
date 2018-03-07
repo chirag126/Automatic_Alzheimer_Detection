@@ -184,7 +184,7 @@ def get_tag_info(content, data_pauses, data_misc):
                    vg_count, NP_count, VP_count, VGP_count,
                    word_sentence_ratio, count_pauses, count_unintelligible,
                    count_trailing, count_repetitions, bruten]
-        
+
     return feature_set  
 
 def process_string(content):    
@@ -294,6 +294,16 @@ def process_string(content):
     string = string.replace('. .', '.')
     return string, count_pause, count_misc
 
+def categorize_MMSE(MMSE):
+    if int(MMSE) in range(0, 21):
+        return 0
+    elif int(MMSE) in range(21, 26):
+        return 1
+    elif int(MMSE) in range(26, 31):
+        return 2
+    else:
+        print('Invalid MMSE')
+        
     
 def main():
     parser = argparse.ArgumentParser(description='Processing Dementia data')
@@ -321,46 +331,81 @@ def main():
     for file in control_list:
          with open(os.path.join(control_path, file),encoding="utf8") as f:
              content = f.read().splitlines()
-         category = content[5].split(':')[1].split('|')[5]    
+#         category = content[5].split(':')[1].split('|')[5]    
          p_id = os.path.join(control_path, file).split('/')[-1].split('-')[0]
 #         visit = os.path.join(control_path, file).split('/')[-1].split('.')[0][-1]
          
          dialogue, count_pause, count_misc = process_string(content)
-         feature_set = get_tag_info(dialogue, count_pause, count_misc)
-         feature_set.append(category)
-         if p_id in control.keys():
-             control[p_id].append(feature_set)
-         else:
-             control[p_id] = []
-             control[p_id].append(feature_set)
+         MMSE = content[5].split(':')[1].split('|')[8]
+         if len(MMSE) != 0:
+#             print('{}--{}'.format(file, MMSE))
+             feature_set = get_tag_info(dialogue, count_pause, count_misc)
+    #         feature_set.append(category)
+             feature_set.append(categorize_MMSE(MMSE))
+             if p_id in control.keys():
+                 control[p_id].append(feature_set)
+             else:
+                 control[p_id] = []
+                 control[p_id].append(feature_set)
          
          
     for file in dementia_list:
          with open(os.path.join(dementia_path, file),encoding="utf8") as f:
              content = f.read().splitlines()
-         category = content[5].split(':')[1].split('|')[5]    
+#         category = content[5].split(':')[1].split('|')[5]    
          p_id = os.path.join(dementia_path, file).split('/')[-1].split('-')[0]
 #         visit = os.path.join(dementia_path, file).split('/')[-1].split('.')[0][-1]
          
          dialogue, count_pause, count_misc = process_string(content)
-         feature_set = get_tag_info(dialogue, count_pause, count_misc)
-         feature_set.append(category)
-         if p_id in dementia.keys():
-             dementia[p_id].append(feature_set)
-         else:
-             dementia[p_id] = []
-             dementia[p_id].append(feature_set)
+         if len(MMSE) != 0:
+             MMSE = content[5].split(':')[1].split('|')[8]         
+             feature_set = get_tag_info(dialogue, count_pause, count_misc)
+    #         feature_set.append(category)
+             feature_set.append(categorize_MMSE(MMSE))         
+             if p_id in dementia.keys():
+                 dementia[p_id].append(feature_set)
+             else:
+                 dementia[p_id] = []
+                 dementia[p_id].append(feature_set)
          
-    
+#    feature_set = [ttr, R, num_concepts_mentioned,
+#                   ARI, CLI, prp_count, prp_noun_ratio, 
+#                   vg_count, NP_count, VP_count, VGP_count,
+#                   word_sentence_ratio, count_pauses, count_unintelligible,
+#                   count_trailing, count_repetitions, bruten]    
     return control, dementia
 
+      
 if __name__ == '__main__':
     longitudanal_control, longitudanal_dementia = main()
-    
+
+    count=1
+    feature_set = []
+    # Choosing patients with greater than equal to 3 visits    
+    for key in longitudanal_control.keys():
+        if len(longitudanal_control[key]) >= 2:
+            if len(longitudanal_control[key]) > 2:
+                for i in range(0, len(longitudanal_control[key])-1):
+                    feature_set.append(longitudanal_control[key][i:i+2])        
+            else:
+                feature_set.append(longitudanal_control[key])
+            count+=1
+                
     for key in longitudanal_dementia.keys():
-        category = np.array(longitudanal_dementia[key])[0, -1]
-        if len(longitudanal_dementia[key]) == 5:
-            plt.figure()
-            plt.plot(np.array(longitudanal_dementia[key])[:, 15], '-o')
-            plt.title('{}--{}'.format(key, category))
-#            plt.legend(range(len(longitudanal_control[key])))
+        if len(longitudanal_dementia[key]) >= 2:
+            if len(longitudanal_dementia[key]) > 2:
+                for i in range(0, len(longitudanal_dementia[key])-1):
+                    feature_set.append(longitudanal_dementia[key][i:i+2])        
+            else:
+                feature_set.append(longitudanal_dementia[key])
+            count+=1
+
+
+
+#    for key in longitudanal_dementia.keys():
+#        category = np.array(longitudanal_dementia[key])[0, -1]
+#        if len(longitudanal_dementia[key]) == 5:
+#            plt.figure()
+#            plt.plot(np.array(longitudanal_dementia[key])[:, 15], '-o')
+#            plt.title('{}--{}'.format(key, category))
+##            plt.legend(range(len(longitudanal_control[key])))
