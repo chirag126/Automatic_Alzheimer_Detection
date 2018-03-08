@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from nltk.stem.wordnet import WordNetLemmatizer 
 lmtzr = WordNetLemmatizer()
+from sklearn.decomposition import PCA as sklearnPCA
 
 def get_tag_info(content, data_pauses, data_misc):    
     
@@ -357,6 +358,7 @@ def main():
 #         visit = os.path.join(dementia_path, file).split('/')[-1].split('.')[0][-1]
          
          dialogue, count_pause, count_misc = process_string(content)
+         MMSE = content[5].split(':')[1].split('|')[8]
          if len(MMSE) != 0:
              MMSE = content[5].split(':')[1].split('|')[8]         
              feature_set = get_tag_info(dialogue, count_pause, count_misc)
@@ -379,28 +381,63 @@ def main():
 if __name__ == '__main__':
     longitudanal_control, longitudanal_dementia = main()
 
-    count=1
-    feature_set = []
-    # Choosing patients with greater than equal to 3 visits    
+    feature_set_control = []
+    # Choosing patients with greater than equal to 2 visits    
     for key in longitudanal_control.keys():
         if len(longitudanal_control[key]) >= 2:
             if len(longitudanal_control[key]) > 2:
                 for i in range(0, len(longitudanal_control[key])-1):
-                    feature_set.append(longitudanal_control[key][i:i+2])        
+                    feature_set_control.append(longitudanal_control[key][i:i+2])        
             else:
-                feature_set.append(longitudanal_control[key])
-            count+=1
-                
+                feature_set_control.append(longitudanal_control[key])
+    
+    control = []
+    for feat in feature_set_control:
+        control.append(feat[0])
+        control.append(feat[1])
+    
+    control = np.array(control)
+    for i in range(control.shape[1]):
+        if np.std(control[:, i]) != 0:
+            control[:, i] = (control[:, i] - np.mean(control[:, i]))/ np.std(control[:, i])
+    
+    # Dimensionality redcution
+    pca = sklearnPCA(n_components=2)
+    pca_transformed = np.array(pca.fit_transform(control))
+    plt.figure()
+    plt.scatter(pca_transformed[range(0, 172, 2), 0], pca_transformed[range(0, 172, 2), 1], label='Visit 1', c='red')
+    plt.scatter(pca_transformed[range(1, 172, 2), 0], pca_transformed[range(1, 172, 2), 1], label='Visit 2', c='blue')
+    plt.legend()
+    plt.show()
+    
+    
+    feature_set_dementia = []            
     for key in longitudanal_dementia.keys():
         if len(longitudanal_dementia[key]) >= 2:
             if len(longitudanal_dementia[key]) > 2:
                 for i in range(0, len(longitudanal_dementia[key])-1):
-                    feature_set.append(longitudanal_dementia[key][i:i+2])        
+                    feature_set_dementia.append(longitudanal_dementia[key][i:i+2])        
             else:
-                feature_set.append(longitudanal_dementia[key])
-            count+=1
+                feature_set_dementia.append(longitudanal_dementia[key])
 
-
+    dementia = []
+    for feat in feature_set_dementia:
+        dementia.append(feat[0])
+        dementia.append(feat[1])
+    
+    dementia = np.array(dementia)
+    for i in range(dementia.shape[1]):
+        if np.std(dementia[:, i]) != 0:
+            dementia[:, i] = (dementia[:, i] - np.mean(dementia[:, i]))/ np.std(dementia[:, i])
+    
+    # Dimensionality redcution
+    pca = sklearnPCA(n_components=2)
+    pca_transformed = np.array(pca.fit_transform(dementia))
+    plt.figure()
+    plt.scatter(pca_transformed[range(0, 172, 2), 0], pca_transformed[range(0, 172, 2), 1], label='Visit 1', c='red')
+    plt.scatter(pca_transformed[range(1, 172, 2), 0], pca_transformed[range(1, 172, 2), 1], label='Visit 2', c='blue')
+    plt.legend()
+    plt.show()
 
 #    for key in longitudanal_dementia.keys():
 #        category = np.array(longitudanal_dementia[key])[0, -1]
