@@ -342,7 +342,7 @@ def main():
 #             print('{}--{}'.format(file, MMSE))
              feature_set = get_tag_info(dialogue, count_pause, count_misc)
     #         feature_set.append(category)
-             feature_set.append(categorize_MMSE(MMSE))
+             feature_set.append(float(MMSE))
              if p_id in control.keys():
                  control[p_id].append(feature_set)
              else:
@@ -363,7 +363,7 @@ def main():
              MMSE = content[5].split(':')[1].split('|')[8]         
              feature_set = get_tag_info(dialogue, count_pause, count_misc)
     #         feature_set.append(category)
-             feature_set.append(categorize_MMSE(MMSE))         
+             feature_set.append(float(MMSE))
              if p_id in dementia.keys():
                  dementia[p_id].append(feature_set)
              else:
@@ -378,6 +378,8 @@ def main():
     return control, dementia
 
       
+# ARI, CLI, prp_count, vp_count
+
 if __name__ == '__main__':
     longitudanal_control, longitudanal_dementia = main()
 
@@ -397,18 +399,24 @@ if __name__ == '__main__':
         control.append(feat[1])
     
     control = np.array(control)
-    for i in range(control.shape[1]):
-        if np.std(control[:, i]) != 0:
-            control[:, i] = (control[:, i] - np.mean(control[:, i]))/ np.std(control[:, i])
+#    for i in range(control.shape[1]-1):
+#        if np.std(control[:, i]) != 0:
+#            control[:, i] = (control[:, i] - np.mean(control[:, i]))/ np.std(control[:, i])
+#    control = control[:, :-1]
     
-    # Dimensionality redcution
-    pca = sklearnPCA(n_components=2)
-    pca_transformed = np.array(pca.fit_transform(control))
-    plt.figure()
-    plt.scatter(pca_transformed[range(0, 172, 2), 0], pca_transformed[range(0, 172, 2), 1], label='Visit 1', c='red')
-    plt.scatter(pca_transformed[range(1, 172, 2), 0], pca_transformed[range(1, 172, 2), 1], label='Visit 2', c='blue')
-    plt.legend()
-    plt.show()
+    dist_control = []
+    for i in range(0, control.shape[0], 2):
+        dist_control.append(control[i+1]-control[i])
+    dist_control = np.array(dist_control)
+        
+#    # Dimensionality redcution
+#    pca_control = sklearnPCA(n_components=2)
+#    pca_transformed_control = np.array(pca_control.fit_transform(control))
+#    plt.figure()
+#    plt.scatter(pca_transformed_control[range(0, 172, 2), 0], pca_transformed_control[range(0, 172, 2), 1], label='Visit 1', c='red')
+#    plt.scatter(pca_transformed_control[range(1, 172, 2), 0], pca_transformed_control[range(1, 172, 2), 1], label='Visit 2', c='blue')
+#    plt.legend()
+#    plt.show()
     
     
     feature_set_dementia = []            
@@ -426,18 +434,39 @@ if __name__ == '__main__':
         dementia.append(feat[1])
     
     dementia = np.array(dementia)
-    for i in range(dementia.shape[1]):
-        if np.std(dementia[:, i]) != 0:
-            dementia[:, i] = (dementia[:, i] - np.mean(dementia[:, i]))/ np.std(dementia[:, i])
-    
-    # Dimensionality redcution
-    pca = sklearnPCA(n_components=2)
-    pca_transformed = np.array(pca.fit_transform(dementia))
-    plt.figure()
-    plt.scatter(pca_transformed[range(0, 172, 2), 0], pca_transformed[range(0, 172, 2), 1], label='Visit 1', c='red')
-    plt.scatter(pca_transformed[range(1, 172, 2), 0], pca_transformed[range(1, 172, 2), 1], label='Visit 2', c='blue')
-    plt.legend()
-    plt.show()
+#    for i in range(dementia.shape[1]-1):
+#        if np.std(dementia[:, i]) != 0:
+#            dementia[:, i] = (dementia[:, i] - np.mean(dementia[:, i]))/ np.std(dementia[:, i])
+#    dementia = dementia[:, :-1]
+
+
+    dist_dementia = []
+    for i in range(0, dementia.shape[0], 2):
+        dist_dementia.append(dementia[i+1]-dementia[i])
+    dist_dementia = np.array(dist_dementia)
+
+plt.figure()
+plt.scatter(dist_control[:, 2], dist_control[:, 8])
+
+
+plt.figure()
+plt.subplot(121)
+plt.hist(dist_control, bins=10)
+#plt.ylim(0, 30)
+#plt.xlim(-10, 10)
+plt.subplot(122)
+plt.hist(dist_dementia, bins=10)
+#plt.ylim(0, 30)
+#plt.xlim(-10, 10)
+plt.suptitle('MMSE')
+#    # Dimensionality redcution
+#    pca_dementia = sklearnPCA(n_components=2)
+#    pca_transformed_dementia = np.array(pca_dementia.fit_transform(dementia))
+#    plt.figure()
+#    plt.scatter(pca_transformed_dementia[range(0, 172, 2), 0], pca_transformed_dementia[range(0, 172, 2), 1], label='Visit 1', c='red')
+#    plt.scatter(pca_transformed_dementia[range(1, 172, 2), 0], pca_transformed_dementia[range(1, 172, 2), 1], label='Visit 2', c='blue')
+#    plt.legend()
+#    plt.show()
 
 #    for key in longitudanal_dementia.keys():
 #        category = np.array(longitudanal_dementia[key])[0, -1]
