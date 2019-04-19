@@ -459,6 +459,7 @@ plt.hist(dist_dementia, bins=10)
 #plt.ylim(0, 30)
 #plt.xlim(-10, 10)
 plt.suptitle('MMSE')
+
 #    # Dimensionality redcution
 #    pca_dementia = sklearnPCA(n_components=2)
 #    pca_transformed_dementia = np.array(pca_dementia.fit_transform(dementia))
